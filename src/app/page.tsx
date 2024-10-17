@@ -1,101 +1,174 @@
-import Image from "next/image";
+"use client";
+import React, { useState, useEffect } from "react";
+import { ethers } from "ethers";
+
+declare global {
+  interface Window {
+    ethereum?: ethers.providers.ExternalProvider & {
+      request?: (...args: any[]) => Promise<any>;
+      on?: (event: string, callback: (...args: any[]) => void) => void;
+      removeListener?: (
+        event: string,
+        callback: (...args: any[]) => void
+      ) => void;
+    };
+  }
+}
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [account, setAccount] = useState<string>("");
+  const [signature, setSignature] = useState<string>("");
+  const [status, setStatus] = useState<string>("");
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  useEffect(() => {
+    const handleAccountsChanged = (accounts: string[]) => {
+      if (accounts.length > 0) {
+        setAccount(accounts[0]);
+      } else {
+        setAccount("");
+        setSignature("");
+        setStatus("");
+      }
+    };
+
+    if (window.ethereum && window.ethereum.on) {
+      window.ethereum.on("accountsChanged", handleAccountsChanged);
+    }
+
+    return () => {
+      if (window.ethereum && window.ethereum.removeListener) {
+        window.ethereum.removeListener(
+          "accountsChanged",
+          handleAccountsChanged
+        );
+      }
+    };
+  }, []);
+
+  const connectWallet = async () => {
+    if (typeof window !== "undefined" && window.ethereum) {
+      try {
+        if (!window.ethereum.request) {
+          throw new Error("Ethereum provider does not have a request method");
+        }
+        const accounts = await window.ethereum.request({
+          method: "eth_requestAccounts",
+        });
+        setAccount(accounts[0]);
+      } catch (error) {
+        console.error("Failed to connect wallet:", error);
+      }
+    } else {
+      console.log("Please install MetaMask!");
+    }
+  };
+
+  const signMessage = async () => {
+    if (!account) {
+      console.log("Please connect your wallet first");
+      return;
+    }
+
+    if (typeof window !== "undefined" && window.ethereum) {
+      try {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+
+        const message = account;
+        const signedMessage = await signer.signMessage(message);
+        setSignature(signedMessage);
+      } catch (error) {
+        console.error("Error signing message:", error);
+      }
+    } else {
+      console.log("Ethereum provider not found");
+    }
+  };
+
+  const copyToClipboard = () => {
+    if (signature) {
+      navigator.clipboard.writeText(signature);
+      setStatus("Signature copied to clipboard!");
+
+      setTimeout(() => {
+        setStatus("");
+      }, 500);
+    }
+  };
+
+  const logout = () => {
+    setAccount("");
+    setSignature("");
+    setStatus("");
+  };
+
+  return (
+    <div
+      className="min-h-screen flex items-center justify-center bg-gray-500 bg-contain bg-center bg-no-repeat p-4"
+      style={{
+        backgroundImage: "url('https://app.redao.org/images/logo-decor.png')",
+        backgroundSize: "contain",
+      }}
+    >
+      {" "}
+      <div className="bg-gray-300 p-4 sm:p-6 md:p-8 rounded-lg shadow-md text-center w-full max-w-5xl mx-auto">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-gray-800">
+          Redao Elite Club
+        </h1>
+
+        {!account ? (
+          <button
+            onClick={connectWallet}
+            className="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full transition duration-300"
           >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+            Connect Wallet
+          </button>
+        ) : (
+          <div className="space-y-4">
+            <p className="mb-4 text-gray-700 text-sm sm:text-base break-words">
+              Connected Account:
+              <span className="font-medium block sm:inline sm:ml-2">
+                {account}
+              </span>
+            </p>
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 justify-center">
+              <button
+                onClick={signMessage}
+                className="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full transition duration-300"
+              >
+                Sign Message
+              </button>
+              <button
+                onClick={logout}
+                className="w-full sm:w-auto bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-full transition duration-300"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        )}
+
+        {signature && (
+          <div className="mt-4">
+            <p className="text-gray-700 text-sm sm:text-base break-words">
+              Signature:
+              <span className="font-medium block sm:inline sm:ml-2">
+                {signature}
+              </span>
+            </p>
+            <button
+              onClick={copyToClipboard}
+              className="w-full sm:w-auto bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-full transition duration-300 mt-4"
+            >
+              Copy
+            </button>
+          </div>
+        )}
+
+        {status && (
+          <p className="mt-4 text-green-600 font-bold text-lg">{status}</p>
+        )}
+      </div>
     </div>
   );
 }
