@@ -74,7 +74,7 @@ export default function Home() {
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const signer = provider.getSigner();
 
-        const message = account;
+        const message = "Hi, I,m reDao Elite NFT holder";
         const signedMessage = await signer.signMessage(message);
         setSignature(signedMessage);
       } catch (error) {
