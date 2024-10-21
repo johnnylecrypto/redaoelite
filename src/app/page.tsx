@@ -104,43 +104,43 @@ export default function Home() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center bg-gray-500 bg-contain bg-center bg-no-repeat p-4"
+      className="flex items-center justify-center min-h-screen p-4 bg-gray-500 bg-center bg-no-repeat bg-contain"
       style={{
         backgroundImage: "url('https://app.redao.org/images/logo-decor.png')",
         backgroundSize: "contain",
       }}
     >
       {" "}
-      <div className="bg-gray-300 p-4 sm:p-6 md:p-8 rounded-lg shadow-md text-center w-full max-w-5xl mx-auto">
-        <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-gray-800">
+      <div className="w-full max-w-5xl p-4 mx-auto text-center bg-gray-300 rounded-lg shadow-md sm:p-6 md:p-8">
+        <h1 className="mb-4 text-2xl font-bold text-gray-800 sm:text-3xl sm:mb-6">
           Redao Elite Club
         </h1>
 
         {!account ? (
           <button
             onClick={connectWallet}
-            className="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full transition duration-300"
+            className="w-full px-4 py-2 font-bold text-white transition duration-300 bg-blue-500 rounded-full sm:w-auto hover:bg-blue-600"
           >
             Connect Wallet
           </button>
         ) : (
           <div className="space-y-4">
-            <p className="mb-4 text-gray-700 text-sm sm:text-base break-words">
+            <p className="mb-4 text-sm text-gray-700 break-words sm:text-base">
               Connected Account:
-              <span className="font-medium block sm:inline sm:ml-2">
+              <span className="block font-medium sm:inline sm:ml-2">
                 {account}
               </span>
             </p>
-            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 justify-center">
+            <div className="flex flex-col justify-center space-y-2 sm:flex-row sm:space-y-0 sm:space-x-4">
               <button
                 onClick={signMessage}
-                className="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full transition duration-300"
+                className="w-full px-4 py-2 font-bold text-white transition duration-300 bg-blue-500 rounded-full sm:w-auto hover:bg-blue-600"
               >
                 Sign Message
               </button>
               <button
                 onClick={logout}
-                className="w-full sm:w-auto bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-full transition duration-300"
+                className="w-full px-4 py-2 font-bold text-white transition duration-300 bg-red-500 rounded-full sm:w-auto hover:bg-red-600"
               >
                 Logout
               </button>
@@ -150,23 +150,27 @@ export default function Home() {
 
         {signature && (
           <div className="mt-4">
-            <p className="text-gray-700 text-sm sm:text-base break-words">
+            <p className="text-sm text-gray-700 break-words sm:text-base">
               Signature:
-              <span className="font-medium block sm:inline sm:ml-2">
+              <span className="block font-medium sm:inline sm:ml-2">
                 {signature}
               </span>
             </p>
             <button
-              onClick={copyToClipboard}
-              className="w-full sm:w-auto bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-full transition duration-300 mt-4"
+              onClick={() => {
+                const telegramUrl = `tg://resolve?domain=redao_premium_bot&text=${encodeURIComponent(
+                  `/sign ${signature}`
+                )}`;
+                window.open(telegramUrl, "_blank");
+              }}
+              className="w-full px-4 py-2 mt-4 font-bold text-white transition duration-300 bg-gray-500 rounded-full sm:w-auto hover:bg-gray-600"
             >
-              Copy
+              Copy & Send to Bot
             </button>
           </div>
         )}
-
         {status && (
-          <p className="mt-4 text-green-600 font-bold text-lg">{status}</p>
+          <p className="mt-4 text-lg font-bold text-green-600">{status}</p>
         )}
       </div>
     </div>
